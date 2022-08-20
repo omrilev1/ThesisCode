@@ -1,11 +1,12 @@
 % Digital PPM: Simulation of Burnashev scheme
 % The simulation is for uniform source
-clear all; close all; clc;
+clear all; clc; % close all; 
+saveResults = 1; 
 
 ENR = (4:1:16);
 ENRlin = 10.^(ENR/10);
 
-Nrun = 6e6; 
+Nrun = 2e5; 
 
 delta = 1/2 + 1/(2*sqrt(2));
 dist = {'Uniform'}; % {'Uniform','Gaussian'}
@@ -24,7 +25,7 @@ for distIdx = 1:length(dist)
         if ENR(i) <= 13
             Nrun = 1e5; % 6e5 for Gaussian source
         else
-            Nrun = 1e6; % 6e6 for uniform source 
+            Nrun = 3e6; % 6e6 for uniform source 
         end
         
         %calculate optimal Quantization for the Gaussian case
@@ -72,8 +73,9 @@ for distIdx = 1:length(dist)
         case 'Uniform'
             optSDR_Analytic_Exact = ((delta^(2/3))/4) .* exp(-ENRlin/3);
             opt_beta = c * exp(ENRlin/6);
-            save('UniformTuncelOptSDR.mat','ENR','final_MSE','optSDR_Analytic_Exact','final_Beta','opt_beta');
-            
+            if saveResults
+                save('UniformTuncelOptSDR.mat','ENR','final_MSE','optSDR_Analytic_Exact','final_Beta','opt_beta');
+            end 
             figure;subplot(211);
             hold all;
             plot(ENR,10*log10(1/12./final_MSE(distIdx,:)),'-.ko','LineWidth',1.5);
@@ -89,10 +91,12 @@ for distIdx = 1:length(dist)
         case 'Gaussian'
             optSDR_Analytic_Exact = exp(-ENRlin/3);
             opt_beta = c * exp(ENRlin/6);
-            if sigmaOptimal
-                save('GaussianTuncelOptSDR_SigmaOptimalCompander.mat','ENR','final_MSE','optSDR_Analytic_Exact','final_Beta','opt_beta');
-            else
-                save('GaussianTuncelOptSDR.mat','ENR','final_MSE','optSDR_Analytic_Exact','final_Beta','opt_beta');
+            if saveResults
+                if sigmaOptimal
+                    save('GaussianTuncelOptSDR_SigmaOptimalCompander.mat','ENR','final_MSE','optSDR_Analytic_Exact','final_Beta','opt_beta');
+                else
+                    save('GaussianTuncelOptSDR.mat','ENR','final_MSE','optSDR_Analytic_Exact','final_Beta','opt_beta');
+                end
             end
             figure;subplot(211);
             hold all;
@@ -147,7 +151,11 @@ parfor n=1:Nrun
     S_Companding = G(round((S - min(x))/dx) + 1);
     
     % Scalar uniform quantization
-    S_q = round((beta_round - 1)* S_Companding);
+    % Improved quantization - no half bin offset
+    Q_levels = 1/(2*beta_round) : (1/beta_round) : 1-1/(2*beta_round);
+    [~, S_q] = min(abs(S_Companding-Q_levels));
+    S_q = S_q - 1;
+%     S_q = round((beta_round - 1)* S_Companding);
     
     % Modulation
     TxPulse = sparse(orthMat(S_q + 1,:));

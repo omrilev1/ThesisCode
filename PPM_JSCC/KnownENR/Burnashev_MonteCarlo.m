@@ -1,6 +1,7 @@
 % Digital PPM: Simulation of Burnashev scheme
 % The simulation is for uniform source
-clear all; close all; clc;
+clear all; clc; % close all; 
+saveResults = 1; 
 
 ENR = (4:1:16);
 ENRlin = 10.^(ENR/10);
@@ -8,7 +9,7 @@ ENRlin = 10.^(ENR/10);
 Nrun = 6e6; % 8e6 for Uniform source, 1e6 for Gaussian source 
 
 delta = 1/2 + 1/(2*sqrt(2));
-dist = {'Gaussian'}; {'Uniform','Gaussian'};
+dist = {'Uniform'}; {'Uniform','Gaussian'};
 
 final_MSE = zeros(length(dist),length(ENR));
 final_Beta = zeros(length(dist),length(ENR));
@@ -45,8 +46,9 @@ for distIdx = 1:length(dist)
         case 'Uniform'
             optSDR_Analytic_Exact = ((delta^(2/3))/4) .* exp(-ENRlin/3);
             opt_beta = exp(ENRlin/6);
-            save('UniformBurnashevOptSDR.mat','ENR','final_MSE','optSDR_Analytic_Exact','final_Beta','opt_beta');
-            
+            if saveResults
+                save('UniformBurnashevOptSDR.mat','ENR','final_MSE','optSDR_Analytic_Exact','final_Beta','opt_beta');
+            end
             figure;subplot(211);
             hold all;
             plot(ENR,10*log10(1/12./final_MSE(distIdx,:)),'-.ko','LineWidth',1.5);
@@ -62,8 +64,9 @@ for distIdx = 1:length(dist)
         case 'Gaussian'
             optSDR_Analytic_Exact = exp(-ENRlin/3);
             opt_beta = exp(ENRlin/6);
-            save('GaussianBurnashevOptSDR.mat','ENR','final_MSE','optSDR_Analytic_Exact','final_Beta','opt_beta');
-            
+            if saveResults
+                save('GaussianBurnashevOptSDR.mat','ENR','final_MSE','optSDR_Analytic_Exact','final_Beta','opt_beta');
+            end
             figure;subplot(211);
             hold all;
             plot(ENR,10*log10(1./final_MSE(distIdx,:)),'-.ko','LineWidth',1.5);
@@ -149,7 +152,12 @@ parfor n=1:Nrun
         case 'Uniform'
             S = rand - 0.5;  % [-0.5,0.5]
             S_pos = S + 0.5; % [0,1]
-            S_q = round((beta_round - 1)* S_pos);
+
+            % Improved quantization - no half bin offset 
+            Q_levels = 1/(2*beta_round) : (1/beta_round) : 1-1/(2*beta_round);
+            [~, S_q] = min(abs(S_pos-Q_levels));
+            S_q = S_q - 1;
+%             S_q = round((beta_round - 1)* S_pos);
         case 'Gaussian'
             S = randn;
             S_q = quantiz(S,opt_partition,opt_codebook);

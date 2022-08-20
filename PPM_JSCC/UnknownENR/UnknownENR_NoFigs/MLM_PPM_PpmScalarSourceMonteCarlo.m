@@ -4,7 +4,7 @@
 close all; clear all; clc;
 
 profileOrder = 2;
-saveResults = 0;
+saveResults = 1;
  
 % Init parameters and arrays structures
 SNR = -7:0.25:35;  % 8              % Direct channel SNR
