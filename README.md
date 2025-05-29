@@ -1,5 +1,5 @@
 # My Master's Thesis Scripts
- This repository contain parts of the code written for my master's thesis and used to produce the simulations in the papers 
+ This repository contains parts of the code written for my master's thesis and used to produce the simulations in the papers 
 
 1. Omri Lev and Anatoly Khina  "Energy-limited Joint Source-Channel Coding of Gaussian Sources over Gaussian Channels with Unknown Noise Level”.  Entropy: Advances in Information and Coding Theory II
 
